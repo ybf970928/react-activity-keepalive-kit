@@ -2,8 +2,6 @@
 
 > 基于 React 19.2 `<Activity>` 的组件级 KeepAlive —— 为 React 带来 Vue `<keep-alive>` 风格的页面/组件缓存能力。
 
-> ⚠️ **请注意**:本包与 npm 上已存在的 [`react-activity-keep-alive`](https://www.npmjs.com/package/react-activity-keep-alive)(带连字符)**不是同一个项目**,作者与实现均不同。
-
 只有 **一个文件 ≈ 130 行**,无第三方依赖,零魔法,完全契合 React 19 的 Activity 生命周期语义。
 
 ---
