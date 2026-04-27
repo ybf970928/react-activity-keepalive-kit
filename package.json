@@ -1,6 +1,6 @@
 {
   "name": "react-activity-keepalive-kit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A KeepAlive component for React 19.2+ built on top of the official <Activity> API, with LRU/PRE cache strategies and an imperative ref API.",
   "type": "module",
   "main": "./dist/index.cjs",
