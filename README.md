@@ -1,57 +1,59 @@
 # react-activity-keepalive-kit
 
-> 基于 React 19.2 `<Activity>` 的组件级 KeepAlive —— 为 React 带来 Vue `<keep-alive>` 风格的页面/组件缓存能力。
+English | [简体中文](./README.zh-CN.md)
 
-只有 **一个文件 ≈ 130 行**,无第三方依赖,零魔法,完全契合 React 19 的 Activity 生命周期语义。
+> Component-level KeepAlive built on React 19.2 `<Activity>` — bringing Vue `<keep-alive>`-style page/component caching to React.
 
----
-
-## 特性
-
-- ✅ **真正的状态保留**:切换路由/标签页后,表单输入、滚动位置、请求结果均保留。
-- ✅ **Activity 原生生命周期**:隐藏时 Effect 自动 cleanup,显示时重新建立——资源占用低,无游离 DOM 副作用。
-- ✅ **LRU / PRE 淘汰策略**:支持上限 `max`,自动淘汰最久未使用或最早进入缓存的节点。
-- ✅ **命令式 Ref API**:`removeCache` / `cleanAllCache` / `cleanOtherCache` / `getCaches`,满足 Tabbar 关闭、退出登录等场景。
-- ✅ **零依赖**:仅依赖 `react >= 19.2`,无 `react-activation` / `react-router-cache-route` 之类重型库。
-- ✅ **TypeScript**:全量类型导出,`strict` 模式可用。
+A **single file ≈ 130 lines**, zero third-party dependencies, no magic — fully aligned with React 19's native Activity lifecycle semantics.
 
 ---
 
-## 为什么需要它
+## Features
 
-React 本身没有开箱即用的 keep-alive,常见方案各有代价:
-
-| 方案                       | 问题                                                             |
-| -------------------------- | ---------------------------------------------------------------- |
-| `display: none` 手动隐藏   | 需自行维护多份 DOM,兄弟组件布局污染,Effect 不暂停                |
-| `createPortal` + 游离 DOM  | IntersectionObserver/ResizeObserver 失效,定时器/订阅无法 cleanup |
-| `react-activation`         | 依赖 Fiber 内部 API,React 升级易坏                               |
-| `react-router-cache-route` | 与 router 强耦合,v6+ 支持差                                      |
-
-`<Activity>` 是 React 19.2 官方钦定的答案,本组件只在其之上加了 **LRU 管理** 与 **Ref API**。
+- ✅ **Real state preservation**: form inputs, scroll positions, and request results are kept intact after switching routes/tabs.
+- ✅ **Native Activity lifecycle**: Effects are cleaned up automatically when hidden and re-established when shown — low resource footprint, no dangling DOM side effects.
+- ✅ **LRU / PRE eviction strategies**: respects a `max` limit and automatically evicts the least recently used or earliest cached node.
+- ✅ **Imperative Ref API**: `removeCache` / `cleanAllCache` / `cleanOtherCache` / `getCaches` — covers tab close, logout and other scenarios.
+- ✅ **Zero dependencies**: only requires `react >= 19.2`, no heavy libraries like `react-activation` or `react-router-cache-route`.
+- ✅ **TypeScript**: full type exports, works under `strict` mode.
 
 ---
 
-## 安装
+## Why you need it
+
+React does not ship an out-of-the-box keep-alive, and the common alternatives all have trade-offs:
+
+| Approach                         | Problem                                                                             |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| Manual `display: none`           | You must maintain multiple DOM trees, sibling layout is polluted, Effects don't pause |
+| `createPortal` + detached DOM    | IntersectionObserver/ResizeObserver break, timers/subscriptions can't be cleaned up |
+| `react-activation`               | Relies on internal Fiber APIs, easily breaks on React upgrades                      |
+| `react-router-cache-route`       | Tightly coupled to the router, poor support on v6+                                  |
+
+`<Activity>` is the officially blessed answer in React 19.2. This component only adds **LRU management** and a **Ref API** on top of it.
+
+---
+
+## Installation
 
 ```bash
 npm install react-activity-keepalive-kit
-# 或
+# or
 yarn add react-activity-keepalive-kit
-# 或
+# or
 pnpm add react-activity-keepalive-kit
 ```
 
-### 要求
+### Requirements
 
-- **React >= 19.2.0**(Activity 正式导出的最低版本)
-- **TypeScript >= 4.9**(可选)
+- **React >= 19.2.0** (the minimum version where Activity is officially exported)
+- **TypeScript >= 4.9** (optional)
 
 ---
 
-## 快速开始
+## Quick Start
 
-### 最简用法
+### Minimal usage
 
 ```tsx
 import KeepAlive from "react-activity-keepalive-kit"
@@ -73,9 +75,9 @@ function App() {
 }
 ```
 
-切换 tab 时,`HomePage` / `ProfilePage` 的内部 state 会自动保留;第二次切回时不会重新请求、不会丢失表单。
+When switching tabs, the internal state of `HomePage` / `ProfilePage` is preserved automatically; switching back the second time does not re-request data or lose form input.
 
-### 配合 React Router v6
+### With React Router v6
 
 ```tsx
 import { useLocation, useOutlet } from "react-router-dom"
@@ -93,7 +95,7 @@ function CachedLayout() {
 }
 ```
 
-### 命令式控制:关闭某个缓存
+### Imperative control: close a specific cache
 
 ```tsx
 import KeepAlive, { useKeepaliveRef } from "react-activity-keepalive-kit"
@@ -123,38 +125,38 @@ function Tabs() {
 
 ### `<KeepAlive>` Props
 
-| 属性         | 类型                              | 默认值  | 说明                                                                 |
-| ------------ | --------------------------------- | ------- | -------------------------------------------------------------------- |
-| `children`   | `ReactNode`                       | —       | 当前要缓存/显示的内容。通常是 router outlet 或条件渲染后的业务组件。 |
-| `activeName` | `string`                          | —       | 当前激活页签的唯一标识(通常是 `location.pathname`)。必填。           |
-| `max`        | `number`                          | `10`    | 最多缓存多少个页签,超出按 `strategy` 淘汰。                          |
-| `strategy`   | `'LRU' \| 'PRE'`                  | `'LRU'` | 淘汰策略。`LRU` = 最近最少使用;`PRE` = 先进先出。                    |
-| `aliveRef`   | `RefObject<KeepAliveRef \| null>` | —       | 用于命令式控制缓存,见下方 `KeepAliveRef`。                           |
+| Prop         | Type                              | Default | Description                                                                                   |
+| ------------ | --------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `children`   | `ReactNode`                       | —       | The content to cache/display. Typically a router outlet or a conditionally-rendered component. |
+| `activeName` | `string`                          | —       | Unique identifier for the currently active tab (usually `location.pathname`). Required.       |
+| `max`        | `number`                          | `10`    | Maximum number of tabs to cache. Excess entries are evicted per `strategy`.                   |
+| `strategy`   | `'LRU' \| 'PRE'`                  | `'LRU'` | Eviction strategy. `LRU` = least recently used; `PRE` = first-in first-out.                   |
+| `aliveRef`   | `RefObject<KeepAliveRef \| null>` | —       | For imperative cache control. See `KeepAliveRef` below.                                       |
 
-### `KeepAliveRef` 方法
+### `KeepAliveRef` methods
 
 ```ts
 type KeepAliveRef = {
-  /** 获取所有缓存节点(name、ele、lastActiveTime) */
+  /** Get all cached nodes (name, ele, lastActiveTime) */
   getCaches: () => CacheNode[]
 
-  /** 删除指定 name 的缓存,组件会真正卸载 */
+  /** Remove the cache with the given name; the component is actually unmounted */
   removeCache: (name: string) => Promise<void>
 
-  /** 等同于 removeCache,保留是为了语义清晰(或与旧版 API 兼容) */
+  /** Alias of removeCache, kept for semantic clarity (or legacy API compatibility) */
   destroy: (name: string) => Promise<void>
 
-  /** 清空全部缓存(登出场景常用) */
+  /** Clear all caches (common on logout) */
   cleanAllCache: () => void
 
-  /** 只保留当前 activeName,其它全部卸载 */
+  /** Keep only the current activeName; unmount everything else */
   cleanOtherCache: () => void
 }
 ```
 
 ### `useKeepaliveRef()`
 
-快捷创建 `KeepAliveRef` 的 hook,等价于 `useRef<KeepAliveRef | null>(null)`,但类型更精确。
+Shortcut hook for creating a `KeepAliveRef`. Equivalent to `useRef<KeepAliveRef | null>(null)` with a more precise type.
 
 ```tsx
 const aliveRef = useKeepaliveRef()
@@ -162,70 +164,70 @@ const aliveRef = useKeepaliveRef()
 
 ---
 
-## 生命周期行为
+## Lifecycle behavior
 
-KeepAlive 直接映射 React `<Activity>` 的官方语义:
+KeepAlive maps directly to React `<Activity>`'s official semantics:
 
-| 状态          | DOM             | React state | Effects                     |
-| ------------- | --------------- | ----------- | --------------------------- |
-| 初次 mount    | 正常渲染        | 新建        | `useEffect` 正常执行        |
-| 切走(hidden)  | `display: none` | **保留**    | **cleanup 被触发(unmount)** |
-| 切回(visible) | 恢复显示        | **恢复**    | Effect **重新建立**         |
-| `removeCache` | 真正移除        | 销毁        | cleanup 被触发              |
+| State              | DOM             | React state | Effects                              |
+| ------------------ | --------------- | ----------- | ------------------------------------ |
+| Initial mount      | Rendered        | Created     | `useEffect` runs normally            |
+| Switch away (hidden)  | `display: none` | **Preserved** | **cleanup fires (unmount)**         |
+| Switch back (visible) | Visible again   | **Restored**  | Effects **re-established**          |
+| `removeCache`      | Actually removed | Destroyed  | cleanup fires                         |
 
-### 与 Vue `<keep-alive>` 对比
+### Comparison with Vue `<keep-alive>`
 
-| 维度               | Vue `<keep-alive>` | React `<Activity>` + 本组件 |
-| ------------------ | ------------------ | --------------------------- |
-| state 保留         | ✅                 | ✅                          |
-| 隐藏时 Effect 行为 | `deactivated` 暂停 | **自动 cleanup**            |
-| 显示时 Effect 行为 | `activated` 恢复   | **重新执行**                |
-| 缓存上限           | `max` prop         | `max` prop                  |
-| 淘汰策略           | LRU                | LRU / PRE 可选              |
+| Dimension                 | Vue `<keep-alive>`   | React `<Activity>` + this component |
+| ------------------------- | -------------------- | ----------------------------------- |
+| State preservation        | ✅                   | ✅                                  |
+| Effect behavior on hide   | `deactivated` paused | **auto cleanup**                    |
+| Effect behavior on show   | `activated` resumed  | **re-runs**                         |
+| Cache limit               | `max` prop           | `max` prop                          |
+| Eviction strategy         | LRU                  | LRU / PRE selectable                |
 
-> 💡 **注意**:如果你的页面隐藏时**需要继续后台轮询**(例如 WebSocket 心跳),请将这部分逻辑迁移到全局 store 或独立的持续运行层,不要放在被缓存的组件内部——Activity 会在隐藏时 cleanup。这是与 `display: none` 方案最关键的行为差异。
+> 💡 **Note**: if your page **needs to keep polling in the background** while hidden (e.g. a WebSocket heartbeat), move that logic to a global store or an independently-running layer — do not put it inside a cached component, because Activity will clean it up on hide. This is the most important behavioral difference from a `display: none` approach.
 
 ---
 
-## 与直接使用 `<Activity>` 的区别
+## Differences from using `<Activity>` directly
 
-React 原生 `<Activity>` 只解决单个组件的缓存语义,**不解决**:
+React's native `<Activity>` only solves caching semantics for a single component. It **does not** handle:
 
-1. **动态新增缓存节点**:路由切换时需要动态往缓存列表里加新页面,本组件自动完成。
-2. **LRU 淘汰**:达到 `max` 后需要丢弃最少使用的节点,本组件内置。
-3. **外部命令式控制**:关闭某个 tab、退出登录时清空——通过 `aliveRef` 完成。
+1. **Dynamically adding cache nodes**: on route changes you need to dynamically append new pages to the cache list — this component does it for you.
+2. **LRU eviction**: once `max` is reached you need to drop the least used node — built in here.
+3. **External imperative control**: closing a specific tab or clearing on logout — done through `aliveRef`.
 
-也就是说:`<KeepAlive>` = `<Activity>` 的多实例管理器。
+In other words: `<KeepAlive>` = a multi-instance manager for `<Activity>`.
 
 ---
 
 ## FAQ
 
-### Q: 升级到 React 19.2 之前的项目能用吗?
+### Q: Can projects on React versions earlier than 19.2 use this?
 
-不能。Activity 在 React 19.2.0 才作为稳定 API 导出。19.0 / 19.1 的 `unstable_Activity` 行为不一致,不受本组件支持。
+No. Activity was only exported as a stable API in React 19.2.0. The `unstable_Activity` in 19.0 / 19.1 has inconsistent behavior and is not supported by this component.
 
-### Q: 为什么切回页面后 `useEffect` 又执行了一遍?
+### Q: Why does `useEffect` run again after switching back to a page?
 
-这是 Activity 的设计。如果你希望**只在首次进入时**执行某些副作用(例如请求初始化数据),建议:
+That is Activity's design. If you want certain side effects to run **only on first entry** (e.g. initial data fetching), consider:
 
-- 把数据放进 SWR/React Query,利用它们的缓存语义;
-- 或者用 `useRef` 手动做一个 mount guard。
+- Putting the data in SWR / React Query and leveraging their cache semantics;
+- Or using a `useRef`-based mount guard.
 
-### Q: 隐藏的页面里的动画/视频会停止吗?
+### Q: Do animations / videos keep running while the page is hidden?
 
-视频:`<video>` 元素在 `display: none` 时行为因浏览器而异,通常不会自动暂停。如需节能,请在组件的 Effect cleanup 里显式 `video.pause()`——Activity 会自动帮你触发 cleanup。
+Videos: `<video>` behavior under `display: none` varies by browser and usually does not auto-pause. To save power, explicitly call `video.pause()` in the component's Effect cleanup — Activity will trigger cleanup for you.
 
-CSS 动画:保留但不可见,不消耗额外 GPU 资源。
+CSS animations: preserved but invisible, with no additional GPU cost.
 
-### Q: SSR 支持吗?
+### Q: Is SSR supported?
 
-理论支持(Activity 本身 SSR 可用),但典型 keep-alive 场景(标签页管理)是纯客户端需求,未针对 SSR 专门测试。欢迎 PR。
+In theory yes (Activity itself is SSR-compatible), but typical keep-alive scenarios (tab management) are purely client-side, so SSR has not been specifically tested. PRs welcome.
 
-### Q: 和 `react-activation` 有什么区别?
+### Q: How is this different from `react-activation`?
 
-- `react-activation` 通过 patch Fiber 实现,维护成本高,React 升级风险大;
-- 本组件基于官方 Activity,随 React 自身稳定性而稳定。
+- `react-activation` works by patching Fiber internals — high maintenance cost, fragile across React upgrades;
+- This component is built on official Activity, staying as stable as React itself.
 
 ---
 
